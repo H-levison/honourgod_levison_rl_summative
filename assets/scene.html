@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cross-Border Liquidity Desk — RL Agent</title>
+<style>
+  :root {
+    --ngn:  #22c55e;
+    --rwf:  #6366f1;
+    --kes:  #f59e0b;
+    --usdt: #06b6d4;
+    --ink:  #e8eef5;
+    --dim:  #8b98a8;
+    --warn: #f43f5e;
+    --ok:   #22c55e;
+    --panel: rgba(10, 14, 20, 0.72);
+    --edge:  rgba(140, 170, 200, 0.16);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #05070a;
+    color: var(--ink);
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #gl { position: fixed; inset: 0; display: block; }
+
+  .hud {
+    position: fixed;
+    pointer-events: none;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    padding: 12px 14px;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 3px;
+  }
+
+  .mono {
+    font-family: "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- title card -------------------------------------------------- */
+  #title { top: 18px; left: 18px; max-width: 330px; }
+  #title h1 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  #title p {
+    margin: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--dim);
+  }
+  #policy {
+    margin-top: 9px;
+    padding-top: 9px;
+    border-top: 1px solid var(--edge);
+    font-size: 11px;
+    color: var(--ink);
+  }
+  #policy b { color: var(--usdt); font-weight: 600; }
+
+  /* ---- metrics ----------------------------------------------------- */
+  #metrics { top: 18px; right: 18px; width: 236px; }
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+    padding: 3px 0;
+  }
+  .row span:first-child { color: var(--dim); }
+  .row span:last-child { font-weight: 600; }
+  .big { font-size: 23px; font-weight: 650; letter-spacing: -0.02em; }
+  .sep { height: 1px; background: var(--edge); margin: 8px 0; }
+  .pos { color: var(--ok); }
+  .neg { color: var(--warn); }
+
+  /* ---- action feed ------------------------------------------------- */
+  #feed { bottom: 18px; left: 18px; width: 276px; }
+  #feedlist { font-size: 11px; line-height: 1.75; }
+  #feedlist div { display: flex; justify-content: space-between; gap: 10px; }
+  #feedlist .t { color: var(--dim); min-width: 34px; }
+  #feedlist .a { flex: 1; }
+  #feedlist .r { text-align: right; min-width: 52px; }
+  #feedlist div:first-child { color: #fff; }
+  #feedlist div:not(:first-child) { opacity: 0.45; }
+
+  /* ---- progress ---------------------------------------------------- */
+  #progress {
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 430px;
+    padding: 10px 14px 12px;
+  }
+  #bar {
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+  }
+  #barfill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--usdt), var(--ngn));
+    transition: width 0.12s linear;
+  }
+  #ptext {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: var(--dim);
+    margin-top: 7px;
+  }
+
+  /* ---- corridor legend --------------------------------------------- */
+  #legend { bottom: 18px; right: 18px; width: 210px; }
+  .corridor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    padding: 3px 0;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .corridor .nm { width: 34px; font-weight: 600; }
+  .corridor .rt { flex: 1; text-align: right; color: var(--dim); }
+  .corridor .dv { min-width: 50px; text-align: right; }
+  .pausedtag {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--warn);
+    border: 1px solid var(--warn);
+    border-radius: 3px;
+    padding: 0 3px;
+  }
+
+  /* ---- overlays ---------------------------------------------------- */
+  #waiting {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(5, 7, 10, 0.86);
+    backdrop-filter: blur(6px);
+    z-index: 20;
+    text-align: center;
+  }
+
+  /* The episode verdict is a card, not a takeover. A full-screen overlay hides
+     the vault at exactly the moment someone is looking at the final state. */
+  #verdict {
+    display: none;
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    padding: 13px 22px;
+    border-radius: 12px;
+    text-align: center;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    pointer-events: none;
+  }
+  #waiting .spin {
+    width: 30px; height: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.14);
+    border-top-color: var(--usdt);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #waiting .msg { font-size: 13px; color: var(--dim); }
+  #waiting .hint { font-size: 11px; color: #5b6676; }
+  #verdict .headline {
+    font-size: 19px;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    margin-bottom: 3px;
+  }
+  #verdict .detail { font-size: 11.5px; color: var(--dim); }
+  #verdict .detail b { color: var(--ink); }
+
+  /* Runtime errors surface on the page, not only in the devtools console. */
+  #crash {
+    display: none;
+    position: fixed;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    z-index: 40;
+    max-height: 42vh;
+    overflow: auto;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: rgba(40, 8, 16, 0.95);
+    border: 1px solid var(--warn);
+    color: #ffd9e0;
+    font-family: ui-monospace, monospace;
+    font-size: 11.5px;
+    white-space: pre-wrap;
+  }
+  #crash b { color: var(--warn); }
+
+  /* ---- agent status (mission control) ------------------------------ */
+  #agent { top: 188px; left: 18px; width: 330px; }
+  #agent .who {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 8px;
+  }
+  #agent .chip {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--usdt), #0b7fa5);
+    box-shadow: 0 0 14px rgba(6, 182, 212, 0.55);
+    flex: none;
+    position: relative;
+  }
+  #agent .chip::after {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 3px;
+    background: #d8fbff;
+  }
+  #agent .nm { font-size: 12.5px; font-weight: 650; }
+  #agent .st { font-size: 10px; color: var(--dim); letter-spacing: 0.1em; }
+  #doing {
+    font-family: ui-monospace, monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--usdt);
+    padding: 7px 10px;
+    border-radius: 7px;
+    background: rgba(6, 182, 212, 0.09);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+  }
+
+  /* ---- devaluation pressure ---------------------------------------- */
+  #risk { top: 352px; right: 18px; width: 236px; }
+  .gauge { margin: 7px 0; }
+  .gauge .top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  .gauge .track {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+  .gauge .fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    transition: width 0.2s ease, background 0.3s ease;
+  }
+
+  /* ---- devaluation alert ------------------------------------------- */
+  #alert {
+    position: fixed;
+    top: 86px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 18;
+    display: none;
+    padding: 11px 26px;
+    border-radius: 9px;
+    background: rgba(160, 14, 40, 0.93);
+    border: 1px solid #ff5f7a;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    box-shadow: 0 0 40px rgba(244, 63, 94, 0.5);
+    pointer-events: none;
+    animation: klaxon 0.55s ease-in-out infinite alternate;
+  }
+  @keyframes klaxon { from { opacity: 0.72; } to { opacity: 1; } }
+
+  #hint {
+    position: fixed;
+    top: 50%;
+    left: 18px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #44505f;
+    pointer-events: none;
+  }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/build/three.module.min.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+<canvas id="gl"></canvas>
+
+<!-- problem statement, for the demo narration -->
+<div class="hud" id="title">
+  <h1>Cross-Border Liquidity Desk</h1>
+  <p>
+    An RL treasury agent routes inventory across NGN, RWF, KES and a USDT
+    settlement rail. It must keep every corridor fillable for a trading week
+    while FX moves against the book.
+  </p>
+  <div id="policy">Policy: <b id="polname">waiting…</b></div>
+</div>
+
+<!-- the agent itself -->
+<div class="hud" id="agent">
+  <div class="who">
+    <div class="chip"></div>
+    <div>
+      <div class="nm" id="agentname">Desk Operator</div>
+      <div class="st" id="agentstate">STANDING BY</div>
+    </div>
+  </div>
+  <div class="mono" id="doing">—</div>
+</div>
+
+<!-- live book metrics -->
+<div class="hud" id="metrics">
+  <div class="label">Net equity (USD)</div>
+  <div class="big mono" id="equity">—</div>
+  <div class="row"><span>P&amp;L</span><span class="mono" id="pnl">—</span></div>
+  <div class="sep"></div>
+  <div class="row"><span>Drawdown</span><span class="mono" id="dd">—</span></div>
+  <div class="row"><span>Quoted spread</span><span class="mono" id="spread">—</span></div>
+  <div class="sep"></div>
+  <div class="row"><span>Fees paid</span><span class="mono" id="fees">—</span></div>
+  <div class="row"><span>Filled</span><span class="mono" id="filled">—</span></div>
+  <div class="row"><span>Stockouts</span><span class="mono" id="stockouts">—</span></div>
+</div>
+
+<!-- what the agent just did -->
+<div class="hud" id="feed">
+  <div class="label">Agent actions</div>
+  <div class="mono" id="feedlist"></div>
+</div>
+
+<!-- episode progress -->
+<div class="hud" id="progress">
+  <div id="bar"><div id="barfill"></div></div>
+  <div id="ptext" class="mono">
+    <span id="stepcount">step 0 / 0</span>
+    <span id="reward">reward —</span>
+  </div>
+</div>
+
+<!-- corridors -->
+<div class="hud" id="legend">
+  <div class="label">Corridors vs. USD</div>
+  <div id="corridors"></div>
+</div>
+
+<!-- devaluation pressure: the leading indicator the agent trades on -->
+<div class="hud" id="risk">
+  <div class="label">Devaluation pressure</div>
+  <div id="gauges"></div>
+</div>
+
+<div id="alert">⚠ DEVALUATION — <span id="alertccy"></span></div>
+
+<div id="hint">drag to orbit · scroll to zoom</div>
+
+<div id="waiting">
+  <div class="spin"></div>
+  <div class="msg">Waiting for the simulation to connect…</div>
+  <div class="hint" id="waithint"></div>
+</div>
+
+<div id="verdict">
+  <div class="headline" id="vhead"></div>
+  <div class="detail" id="vdetail"></div>
+</div>
+
+<div id="crash"></div>
+
+<script type="module" src="./js/scene.js"></script>
+</body>
+</html>
