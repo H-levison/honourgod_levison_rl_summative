@@ -7,27 +7,27 @@ Produced by `uv run python -m training.tables` from the CSVs in `logs/`. Do not 
 
 | Algorithm | Best configuration | Sweep score (40 ep) | Held-out score (200 ep) | vs `hold` |
 |---|---|---:|---:|---:|
-| DQN | `d09-batch-large` | -54.97 | -92.31 | +21.71 (t = +1.55) |
-| REINFORCE | `r01-baseline` | -13.76 | -46.34 | +67.68 (t = +5.47) |
-| PPO | `p06-lambda-low` | +27.39 | -5.58 | +108.44 (t = +7.85) |
-| A2C | `a06-critic-weak` | -30.36 | -58.10 | +55.92 (t = +5.08) |
+| DQN | `d09-batch-large` | -54.97 | -85.51 | +31.30 (t = +2.20) |
+| REINFORCE | `r01-baseline` | -13.76 | -35.40 | +81.41 (t = +6.83) |
+| PPO | `p06-lambda-low` | +27.39 | +0.33 | +117.14 (t = +9.69) |
+| A2C | `a06-critic-weak` | -30.36 | -43.89 | +72.92 (t = +6.69) |
 
 The two score columns differ because the sweep ranks configurations on 40 episodes while the held-out column re-scores the winner on 200. The gap is a measurement of evaluation noise, not a discrepancy: 40 episodes is enough to rank, not enough to report.
 
 
 ## Held-out evaluation
 
-All policies on the identical seed set 9000..9199 (n = 200).
+All policies on the identical seed set 20000..20199 (n = 200).
 
 | Policy | Mean return | Equity | Max DD | Stockouts | Fees $ | Revenue $ | Idle | vs `hold` (paired) | t |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| PPO | -5.58 | +0.64% | 2.47% | 16.5 | 365 | 4,770 | 40% | +108.44 ± 13.81 | **+7.85** |
-| REINFORCE | -46.34 | -1.72% | 5.03% | 7.9 | 145 | 4,942 | 60% | +67.68 ± 12.38 | **+5.47** |
-| A2C | -58.10 | -2.30% | 5.80% | 7.2 | 160 | 4,804 | 38% | +55.92 ± 11.02 | **+5.08** |
-| Heuristic | -80.54 | -3.79% | 6.07% | 0.0 | 2,085 | 5,552 | 23% | +33.48 ± 12.27 | **+2.73** |
-| DQN | -92.31 | -3.48% | 5.80% | 17.9 | 715 | 4,096 | 11% | +21.71 ± 14.00 | +1.55 |
-| Hold | -114.02 | -4.23% | 7.44% | 22.3 | 0 | 4,632 | 100% | — | — |
-| Random | -155.87 | -7.40% | 8.68% | 0.1 | 1,177 | 2,265 | 8% | -41.85 ± 15.79 | **-2.65** |
+| PPO | +0.33 | +0.86% | 2.47% | 14.9 | 357 | 4,870 | 41% | +117.14 ± 12.09 | **+9.69** |
+| REINFORCE | -35.40 | -1.24% | 4.43% | 7.3 | 172 | 4,973 | 58% | +81.41 ± 11.92 | **+6.83** |
+| A2C | -43.89 | -1.74% | 4.92% | 5.8 | 153 | 5,008 | 44% | +72.92 ± 10.90 | **+6.69** |
+| Heuristic | -69.10 | -3.28% | 5.73% | 0.0 | 2,085 | 5,664 | 24% | +47.71 ± 12.33 | **+3.87** |
+| DQN | -85.51 | -3.16% | 5.56% | 18.3 | 722 | 4,112 | 10% | +31.30 ± 14.25 | **+2.20** |
+| Hold | -116.81 | -4.14% | 7.46% | 27.2 | 0 | 4,560 | 100% | — | — |
+| Random | -132.18 | -6.27% | 7.73% | 0.0 | 1,203 | 2,340 | 8% | -15.37 ± 14.94 | -1.03 |
 
 Paired because the FX path is common to every policy on a given seed and controllable by none of them; differencing removes it. Bold *t* exceeds |2|, the significance bar used throughout.
 

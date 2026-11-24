@@ -305,9 +305,11 @@ def fig_generalisation() -> None:
     """
     final = load_final_evaluation()
     names, scores, colours, episodes = [], [], [], None
+    seed0 = None
 
     if final is not None and not final.empty:
         episodes = int(final["episodes"].iloc[0])
+        seed0 = int(final["seed_base"].iloc[0])
         tags = {a: best_tag(a) for a in ALGOS}
         for _, row in final.iterrows():
             key = str(row["policy"]).lower()
@@ -356,7 +358,8 @@ def fig_generalisation() -> None:
         )
 
     ax.axvline(0, color="#334155", lw=0.9)
-    seeds = f", {episodes} held-out seeds (9000+)" if episodes else ""
+    seeds = (f", {episodes} unseen seeds ({seed0}–{seed0 + episodes - 1})"
+             if episodes and seed0 is not None else "")
     ax.set_xlabel(f"mean episode return{seeds}")
     ax.set_title(
         "Generalisation: trained agents vs. rule-based references",

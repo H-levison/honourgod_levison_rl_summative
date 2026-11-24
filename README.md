@@ -74,13 +74,13 @@ classification.
 
 **A fixed rule leaves measurable value on the table.** The repository ships
 three reference policies so this is an empirical claim rather than an assertion.
-Over 200 held-out seeds, paired by seed:
+Over 200 held-out seeds (20000–20199, disjoint from training and model selection), paired by seed:
 
 | Policy | Mean return | vs. `hold` (paired) |
 |---|---|---|
-| `random` | −155.9 | −41.85 ± 15.79, t = −2.65 |
-| `hold` | −114.0 | — |
-| `heuristic` | −80.5 | **+33.48 ± 12.27, t = +2.73** |
+| `random` | −132.2 | −15.37 ± 14.94, t = −1.03 |
+| `hold` | −116.8 | — |
+| `heuristic` | −69.1 | **+47.71 ± 12.33, t = +3.87** |
 
 The comparison is paired because the dominant variance term — the FX path — is
 common to every policy on a given seed and controllable by none of them. The
@@ -93,15 +93,15 @@ the week with more equity than it started:
 
 | Policy | Mean return | Equity | Max drawdown | Fees $ | vs. `hold` (paired) |
 |---|---:|---:|---:|---:|---|
-| **PPO** `p06-lambda-low` | **−5.6** | **+0.64%** | **2.47%** | 365 | **+108.44 ± 13.81, t = +7.85** |
-| REINFORCE `r01-baseline` | −46.3 | −1.72% | 5.03% | 145 | +67.68 ± 12.38, t = +5.47 |
-| A2C `a06-critic-weak` | −58.1 | −2.30% | 5.80% | 160 | +55.92 ± 11.02, t = +5.08 |
-| `heuristic` | −80.5 | −3.79% | 6.07% | 2,085 | +33.48 ± 12.27, t = +2.73 |
-| DQN `d09-batch-large` | −92.3 | −3.48% | 5.80% | 715 | +21.71 ± 14.00, t = +1.55 (n.s.) |
+| **PPO** `p06-lambda-low` | **+0.3** | **+0.86%** | **2.47%** | 357 | **+117.14 ± 12.09, t = +9.69** |
+| REINFORCE `r01-baseline` | −35.4 | −1.24% | 4.43% | 172 | +81.41 ± 11.92, t = +6.83 |
+| A2C `a06-critic-weak` | −43.9 | −1.74% | 4.92% | 153 | +72.92 ± 10.90, t = +6.69 |
+| `heuristic` | −69.1 | −3.28% | 5.73% | 2,085 | +47.71 ± 12.33, t = +3.87 |
+| DQN `d09-batch-large` | −85.5 | −3.16% | 5.56% | 722 | +31.30 ± 14.25, t = +2.20 |
 
 The fee column is where the learned policies separate from the written one. The
-heuristic prevents every stockout and pays $2,085 to do it; PPO tolerates 16.5
-stockouts a week, pays $365, and finishes 75 points ahead. Nothing in the reward
+heuristic prevents every stockout and pays $2,085 to do it; PPO tolerates 14.9
+stockouts a week, pays $357, and finishes 69 points ahead. Nothing in the reward
 function names that trade-off — it is the trade-off the agent had to discover,
 and it is exactly what a desk risk manager is paid to judge. PPO also runs at
 **half the drawdown** of every other policy, so it wins on risk control rather
