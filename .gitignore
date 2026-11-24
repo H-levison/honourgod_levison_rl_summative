@@ -1,0 +1,29 @@
+# Environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+
+# Video recording is delivered separately, not through the repository.
+*.mp4
+
+# --------------------------------------------------------------------------- #
+# Results
+#
+# The study's evidence ships with the repository: the per-run training logs
+# behind every figure (~2.8 MB), the four sweep summaries, the held-out
+# scoreboard, and the best checkpoint per algorithm (~1.3 MB). Without the
+# checkpoints `uv run play.py` falls back to the rule-based operator and a
+# reader never sees a trained agent.
+#
+# Excluded is the bulk that regenerates and adds nothing to read: the 48
+# per-configuration checkpoints (~18 MB), of which the four promoted copies
+# are kept above.
+# --------------------------------------------------------------------------- #
+models/**/*.pt
+models/**/*.pth
+!models/dqn/dqn_best.pt
+!models/pg/ppo_best.pt
+!models/pg/a2c_best.pt
+!models/pg/reinforce_best.pt
