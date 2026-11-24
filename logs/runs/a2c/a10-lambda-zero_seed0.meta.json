@@ -1,0 +1,62 @@
+{
+  "algo": "a2c",
+  "tag": "a10-lambda-zero",
+  "seed": 0,
+  "config": {
+    "total_frames": 299520,
+    "hidden": [
+      256,
+      256
+    ],
+    "gamma": 0.99,
+    "max_grad_norm": 1.0,
+    "eval_episodes": 20,
+    "eval_every_frames": 25000,
+    "device": "auto",
+    "frames_per_batch": 512,
+    "lr": 0.0007,
+    "entropy_coef": 0.01,
+    "critic_coef": 0.5,
+    "lmbda": 0.0,
+    "tag": "a10-lambda-zero",
+    "note": "Pure one-step TD advantage, classical A2C. Maximum bias, minimum variance.",
+    "algo": "a2c"
+  },
+  "git_sha": "uncommitted",
+  "started": "2026-11-24T17:15:59",
+  "torch": "2.15.0+cpu",
+  "cuda": false,
+  "device_name": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "obs_dim": 35,
+  "n_actions": 13,
+  "train_seed_base": 0,
+  "eval_seed_base": 9000,
+  "summary": {
+    "eval_return_mean": -101.68764386590541,
+    "eval_return_std": 170.35490854355314,
+    "eval_equity_ratio": 0.9561945265110305,
+    "eval_drawdown": 0.08065512552802738,
+    "eval_stockouts": 7.625,
+    "eval_insolvency_rate": 0.2,
+    "action_distribution": {
+      "HOLD": 0.0,
+      "NGN_TO_USDT": 0.002037970610318567,
+      "USDT_TO_NGN": 0.0,
+      "RWF_TO_USDT": 0.0,
+      "USDT_TO_RWF": 0.0,
+      "KES_TO_USDT": 0.0,
+      "USDT_TO_KES": 0.0,
+      "WIDEN_SPREAD": 0.08377131824520004,
+      "TIGHTEN_SPREAD": 0.0034323715542207444,
+      "PAUSE_NGN": 0.0,
+      "PAUSE_RWF": 0.0,
+      "PAUSE_KES": 0.0,
+      "RESUME_ALL": 0.9107583395902606
+    },
+    "score": -101.68764386590541,
+    "frames": 299520,
+    "wall_seconds": 916.1
+  },
+  "wall_seconds": 925.6,
+  "finished": "2026-11-24T17:31:24"
+}

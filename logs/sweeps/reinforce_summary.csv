@@ -1,0 +1,13 @@
+algo,tag,seed,score,equity_ratio,drawdown,stockouts,insolvency_rate,frames,wall_seconds,note
+reinforce,r01-baseline,0,-13.758515355128974,0.9985532374901014,0.04330032134258678,7.65,0.1,300000,733.8,Reference settings for the family.
+reinforce,r09-entropy-zero,0,-22.895604810419297,0.9945107905424801,0.04551858182510959,8.25,0.125,300000,802.5,"No entropy bonus. Watch for premature collapse onto HOLD, the action with the lowest immediate cost."
+reinforce,r07-batch-small,0,-47.04221366102237,0.987580521794521,0.04113192611224993,20.175,0.075,300000,792.6,Frequent but very noisy updates. Expect erratic learning curves.
+reinforce,r04-lr-high,0,-50.54386988116602,0.9868682683014413,0.05148605953471885,20.95,0.1,300000,744.2,Large steps on a high-variance gradient estimate. Tests whether the policy can survive its own update noise.
+reinforce,r10-gamma-short,0,-50.64993604053863,0.9800832732367368,0.0468884392200055,9.075,0.025,300000,800.7,"Short horizon on a Monte Carlo estimator, which already sees the whole episode. Tests how much the discount alone matters."
+reinforce,r06-batch-large,0,-51.49010581905039,0.9872868669256857,0.04716318106518476,22.925,0.1,300000,760.1,Triples the episodes per gradient step. The cleanest available lever on Monte Carlo variance.
+reinforce,r08-entropy-high,0,-64.18920520499782,0.9783132943483516,0.05351304198831477,17.825,0.125,300000,795.2,Strong exploration pressure. Should keep the agent trying rebalances it would otherwise abandon early.
+reinforce,r05-lr-low,0,-65.55924790178706,0.9712997057662838,0.05865607825605319,3.75,0.15,300000,786.4,"Small steps to average out variance, at the cost of sample efficiency over a fixed frame budget."
+reinforce,r11-gamma-undiscounted,0,-97.13741719751242,0.9589067565248295,0.061871431470929925,9.375,0.2,300000,809.5,"No discounting at all. Correct for a fixed-length episode, but maximal return variance."
+reinforce,r02-no-baseline,0,-99.27795671870108,0.9678018096511188,0.05742313269929043,29.2,0.175,300000,723.4,Textbook REINFORCE. Expect the highest gradient variance of any run in the study -- this is the control that shows why baselines exist.
+reinforce,r03-no-normalize,0,-109.65547954354315,0.9596063396069308,0.07883500732223045,22.15,0.25,300000,735.3,"Raw returns. Reward scale varies with FX regime, so this should destabilise the policy when volatility clusters."
+reinforce,r12-net-small,0,-165.63624967006743,0.9534092236585782,0.06818082708895115,67.125,0.15,300000,786.9,A smaller policy generalises more and overfits the FX noise less; paired with a higher learning rate.

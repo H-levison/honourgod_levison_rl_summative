@@ -1,0 +1,13 @@
+algo,tag,seed,score,equity_ratio,drawdown,stockouts,insolvency_rate,frames,wall_seconds,note
+ppo,p06-lambda-low,0,27.394145408562782,1.0209400043192889,0.013898251293783298,14.025,0.0,300000,1181.0,"GAE closer to one-step TD: lower variance, more bias. Should blur credit for rebalances that pay off slowly."
+ppo,p04-epochs-few,0,3.092463802524861,1.0093334274209114,0.036076412921970474,12.925,0.1,300000,1054.3,"Less reuse per batch. Lower off-policy drift, worse sample efficiency."
+ppo,p09-batch-small,0,2.42945999832651,1.0084182950549443,0.02661081484486786,12.325,0.05,300000,1297.7,Frequent updates on short rollouts that rarely span a full devaluation episode.
+ppo,p01-baseline,0,-13.17564176766262,1.0034652279929068,0.02739744913587545,18.575,0.025,300000,1180.4,Reference settings for the family.
+ppo,p03-clip-loose,0,-13.996426465806072,0.9977043289021431,0.03177313968876959,7.35,0.05,300000,1186.8,"Weak constraint, approaching unclipped policy gradient. Tests whether clipping is what keeps PPO stable here."
+ppo,p10-entropy-high,0,-40.34575348226635,0.9901117728196229,0.041306067847887824,17.275,0.1,300000,1215.3,"Keeps the action distribution broad for longer, counteracting early collapse onto HOLD."
+ppo,p02-clip-tight,0,-44.0429534220667,0.9955356553383645,0.03305624827925952,32.6,0.075,300000,1195.5,Very conservative trust region. Slow but should be the most monotonic curve in the study.
+ppo,p07-lambda-one,0,-45.26941231715965,0.9879991888070435,0.03904165429848787,17.95,0.125,300000,1214.3,"GAE becomes the full Monte Carlo advantage. Unbiased, high variance -- the direct bridge to the REINFORCE family."
+ppo,p08-batch-large,0,-50.080755918036324,0.9829593472404227,0.04578000771857579,13.375,0.05,288000,1100.0,"Four times the data per policy update. Better advantage estimates, fewer updates within the frame budget."
+ppo,p05-epochs-many,0,-53.8894992398325,0.9774460035956516,0.038190878946572436,5.55,0.1,300000,1618.4,Heavy reuse of each batch. Expect the ratio to leave the trust region and clipping to bind on most minibatches.
+ppo,p12-gamma-long,0,-56.05251664704358,0.9827150003825427,0.05380220383702439,16.675,0.175,300000,1178.0,"Long horizon with long GAE traces, matched to the 500-step episode. The configuration theory favours for this task."
+ppo,p11-lr-high,0,-56.78729652185196,0.9767034866287212,0.053176441080188486,5.85,0.15,300000,1211.3,Tests whether PPO's clipping absorbs an aggressive learning rate that would break REINFORCE outright.

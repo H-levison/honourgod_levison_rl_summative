@@ -1,0 +1,13 @@
+algo,tag,seed,score,equity_ratio,drawdown,stockouts,insolvency_rate,frames,wall_seconds,note
+dqn,d09-batch-large,0,-54.96777882653688,0.9841287554239031,0.045832415215774594,19.5,0.1,299776,645.0,"Lower-variance gradients per update, fewer updates. Tests the batch-size / update-count trade-off at fixed compute."
+dqn,d08-no-double,0,-79.86933032953664,0.9700009501456451,0.05319731454967993,16.9,0.1,299776,628.9,"Isolates Double-DQN's contribution. Expect optimistic value bias, visible as overconfident holding during devaluations."
+dqn,d11-explore-short,0,-81.32348566650586,0.96445750610328,0.05981686521172254,5.4,0.175,299776,639.3,Commits to greedy behaviour early. Risks locking in a do-nothing policy before the cost of stockouts is learned.
+dqn,d12-net-wide,0,-83.68620010013645,0.9619704257982725,0.05717789095369787,4.775,0.1,299776,733.7,"More capacity for the 35-dim observation, with the learning rate reduced to keep the larger network stable."
+dqn,d02-lr-high,0,-91.97660063093998,0.9626074537341118,0.06140035859140629,13.05,0.175,299776,931.7,Faster value updates. Expect quicker early progress but noisier Q-estimates once FX jumps start appearing.
+dqn,d04-gamma-short,0,-110.42842472436652,0.9496909337238375,0.07339837131357096,4.375,0.2,299776,931.0,Shortens the effective horizon to ~20 steps. Should under-value rebalances whose payoff is a stockout avoided much later.
+dqn,d05-gamma-long,0,-140.7099272068934,0.9383055519720991,0.09248288712336265,8.15,0.325,299776,933.1,"Horizon ~200 steps, close to the episode length. Better credit assignment, but higher variance in the bootstrap target."
+dqn,d06-buffer-small,0,-146.79223502273123,0.9395798051402838,0.09072147555619951,17.8,0.325,299776,935.9,Replay holds roughly 40 episodes. Tests sensitivity to stale transitions drawn from a non-stationary FX process.
+dqn,d01-baseline,0,-165.1078349890184,0.9251203871582951,0.09104024163514593,6.6,0.35,299776,939.4,Reference settings for the family.
+dqn,d03-lr-low,0,-172.54750554293804,0.9243145381929242,0.09136114451807145,13.325,0.3,299776,935.1,"Slow, stable bootstrapping. Tests whether d02's instability is really a learning-rate effect."
+dqn,d10-explore-long,0,-211.60256369190802,0.9277064469309242,0.09349396906194066,57.975,0.3,299776,632.5,"Exploration for 80% of training. Stockouts are rare events, so sustained exploration may be needed to ever see them."
+dqn,d07-target-hard,0,-229.7425000128839,0.9143775799812655,0.10134493176479739,48.1,0.375,299776,627.9,"Hard periodic target copy instead of Polyak averaging, the original DQN scheme."

@@ -1,0 +1,13 @@
+algo,tag,seed,score,equity_ratio,drawdown,stockouts,insolvency_rate,frames,wall_seconds,note
+a2c,a06-critic-weak,0,-30.36283008680818,0.9905706088961418,0.05081727879758487,7.925,0.1,299520,947.4,"Under-trained critic means a poor baseline, pushing A2C back toward REINFORCE-like variance."
+a2c,a08-entropy-high,0,-34.889896347576084,0.9880789810424961,0.04596925616709023,7.225,0.125,299520,902.1,Sustained exploration across the 13 discrete actions.
+a2c,a07-critic-strong,0,-35.41354911828422,0.98733820675149,0.04662596521092812,6.3,0.15,299520,895.4,Critic dominates the shared gradient. Tests whether value accuracy or policy improvement is the binding constraint.
+a2c,a01-baseline,0,-35.732692379158784,0.988041948940262,0.0433145286876946,8.875,0.1,299520,933.6,Reference settings for the family.
+a2c,a12-net-wide,0,-41.87142959115134,0.9831516624853653,0.04123963728185234,4.95,0.125,299520,1039.5,"More capacity in the shared trunk, with a reduced learning rate."
+a2c,a09-entropy-zero,0,-49.68545921431132,0.9803430440900275,0.05477541337010494,7.6,0.05,299520,900.2,Expect the fastest policy collapse of any actor-critic run.
+a2c,a03-nstep-long,0,-64.14732768194737,0.9717834231618643,0.06466147026799343,3.225,0.15,299008,941.1,Long rollouts approach PPO's batch regime without the clipped objective -- a clean isolation of what clipping buys.
+a2c,a02-nstep-short,0,-65.67926188828824,0.9714549751966672,0.062000945264268546,4.425,0.125,299904,930.7,"Very short bootstrap. Fast, biased, and likely blind to delayed stockout costs."
+a2c,a11-gamma-long,0,-67.29817791218439,0.9758960062973696,0.061490352203696585,14.025,0.175,299520,955.1,"Extends the horizon while keeping rollouts short, stressing the critic's bootstrap accuracy."
+a2c,a04-lr-high,0,-80.91961702268057,0.9763267891493583,0.05840531455668692,29.675,0.175,299520,922.8,"A2C has no trust region, so this should be visibly less stable than PPO at a comparable learning rate."
+a2c,a05-lr-low,0,-95.2536633537968,0.9662233478568002,0.06627569251913087,23.0,0.15,299520,929.0,Conservative steps to compensate for the missing trust region.
+a2c,a10-lambda-zero,0,-101.68764386590541,0.9561945265110305,0.08065512552802738,7.625,0.2,299520,916.1,"Pure one-step TD advantage, classical A2C. Maximum bias, minimum variance."

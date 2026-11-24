@@ -1,0 +1,62 @@
+{
+  "algo": "a2c",
+  "tag": "a02-nstep-short",
+  "seed": 0,
+  "config": {
+    "total_frames": 299904,
+    "hidden": [
+      256,
+      256
+    ],
+    "gamma": 0.99,
+    "max_grad_norm": 1.0,
+    "eval_episodes": 20,
+    "eval_every_frames": 25000,
+    "device": "auto",
+    "frames_per_batch": 128,
+    "lr": 0.0007,
+    "entropy_coef": 0.01,
+    "critic_coef": 0.5,
+    "lmbda": 0.95,
+    "tag": "a02-nstep-short",
+    "note": "Very short bootstrap. Fast, biased, and likely blind to delayed stockout costs.",
+    "algo": "a2c"
+  },
+  "git_sha": "uncommitted",
+  "started": "2026-11-24T17:00:08",
+  "torch": "2.15.0+cpu",
+  "cuda": false,
+  "device_name": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "obs_dim": 35,
+  "n_actions": 13,
+  "train_seed_base": 0,
+  "eval_seed_base": 9000,
+  "summary": {
+    "eval_return_mean": -65.67926188828824,
+    "eval_return_std": 152.79402008126772,
+    "eval_equity_ratio": 0.9714549751966672,
+    "eval_drawdown": 0.062000945264268546,
+    "eval_stockouts": 4.425,
+    "eval_insolvency_rate": 0.125,
+    "action_distribution": {
+      "HOLD": 0.0,
+      "NGN_TO_USDT": 0.0,
+      "USDT_TO_NGN": 0.0006740291387981542,
+      "RWF_TO_USDT": 0.11121480790169544,
+      "USDT_TO_RWF": 0.00010369679058433142,
+      "KES_TO_USDT": 0.003370145693990771,
+      "USDT_TO_KES": 0.0,
+      "WIDEN_SPREAD": 0.7586975683102608,
+      "TIGHTEN_SPREAD": 0.00010369679058433142,
+      "PAUSE_NGN": 0.0,
+      "PAUSE_RWF": 0.0014517550681806398,
+      "PAUSE_KES": 0.00010369679058433142,
+      "RESUME_ALL": 0.1242806035153212
+    },
+    "score": -65.67926188828824,
+    "frames": 299904,
+    "wall_seconds": 930.7
+  },
+  "wall_seconds": 948.4,
+  "finished": "2026-11-24T17:15:56"
+}

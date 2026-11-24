@@ -1,0 +1,62 @@
+{
+  "algo": "a2c",
+  "tag": "a07-critic-strong",
+  "seed": 0,
+  "config": {
+    "total_frames": 299520,
+    "hidden": [
+      256,
+      256
+    ],
+    "gamma": 0.99,
+    "max_grad_norm": 1.0,
+    "eval_episodes": 20,
+    "eval_every_frames": 25000,
+    "device": "auto",
+    "frames_per_batch": 512,
+    "lr": 0.0007,
+    "entropy_coef": 0.01,
+    "critic_coef": 1.0,
+    "lmbda": 0.95,
+    "tag": "a07-critic-strong",
+    "note": "Critic dominates the shared gradient. Tests whether value accuracy or policy improvement is the binding constraint.",
+    "algo": "a2c"
+  },
+  "git_sha": "uncommitted",
+  "started": "2026-11-24T17:15:48",
+  "torch": "2.15.0+cpu",
+  "cuda": false,
+  "device_name": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "obs_dim": 35,
+  "n_actions": 13,
+  "train_seed_base": 0,
+  "eval_seed_base": 9000,
+  "summary": {
+    "eval_return_mean": -35.41354911828422,
+    "eval_return_std": 158.43286840478143,
+    "eval_equity_ratio": 0.98733820675149,
+    "eval_drawdown": 0.04662596521092812,
+    "eval_stockouts": 6.3,
+    "eval_insolvency_rate": 0.15,
+    "action_distribution": {
+      "HOLD": 0.0,
+      "NGN_TO_USDT": 0.13372244515086767,
+      "USDT_TO_NGN": 0.0,
+      "RWF_TO_USDT": 0.021418521027672104,
+      "USDT_TO_RWF": 0.0,
+      "KES_TO_USDT": 0.0,
+      "USDT_TO_KES": 0.0,
+      "WIDEN_SPREAD": 0.17166084736046694,
+      "TIGHTEN_SPREAD": 0.0,
+      "PAUSE_NGN": 0.0,
+      "PAUSE_RWF": 0.0,
+      "PAUSE_KES": 0.0,
+      "RESUME_ALL": 0.6731981864609933
+    },
+    "score": -35.41354911828422,
+    "frames": 299520,
+    "wall_seconds": 895.4
+  },
+  "wall_seconds": 906.7,
+  "finished": "2026-11-24T17:30:55"
+}

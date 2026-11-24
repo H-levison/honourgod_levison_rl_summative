@@ -1,0 +1,62 @@
+{
+  "algo": "a2c",
+  "tag": "a04-lr-high",
+  "seed": 0,
+  "config": {
+    "total_frames": 299520,
+    "hidden": [
+      256,
+      256
+    ],
+    "gamma": 0.99,
+    "max_grad_norm": 1.0,
+    "eval_episodes": 20,
+    "eval_every_frames": 25000,
+    "device": "auto",
+    "frames_per_batch": 512,
+    "lr": 0.002,
+    "entropy_coef": 0.01,
+    "critic_coef": 0.5,
+    "lmbda": 0.95,
+    "tag": "a04-lr-high",
+    "note": "A2C has no trust region, so this should be visibly less stable than PPO at a comparable learning rate.",
+    "algo": "a2c"
+  },
+  "git_sha": "uncommitted",
+  "started": "2026-11-24T17:00:08",
+  "torch": "2.15.0+cpu",
+  "cuda": false,
+  "device_name": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "obs_dim": 35,
+  "n_actions": 13,
+  "train_seed_base": 0,
+  "eval_seed_base": 9000,
+  "summary": {
+    "eval_return_mean": -80.91961702268057,
+    "eval_return_std": 152.63794431272575,
+    "eval_equity_ratio": 0.9763267891493583,
+    "eval_drawdown": 0.05840531455668692,
+    "eval_stockouts": 29.675,
+    "eval_insolvency_rate": 0.175,
+    "action_distribution": {
+      "HOLD": 0.0002169079767908465,
+      "NGN_TO_USDT": 0.8337942627840139,
+      "USDT_TO_NGN": 0.0028198036982810043,
+      "RWF_TO_USDT": 0.006181877338539124,
+      "USDT_TO_RWF": 0.0,
+      "KES_TO_USDT": 0.021311208719700665,
+      "USDT_TO_KES": 0.004771975489398623,
+      "WIDEN_SPREAD": 0.01697304918388374,
+      "TIGHTEN_SPREAD": 0.04077869963667914,
+      "PAUSE_NGN": 0.0,
+      "PAUSE_RWF": 0.00010845398839542325,
+      "PAUSE_KES": 0.0009760858955588092,
+      "RESUME_ALL": 0.07206767528875875
+    },
+    "score": -80.91961702268057,
+    "frames": 299520,
+    "wall_seconds": 922.8
+  },
+  "wall_seconds": 940.1,
+  "finished": "2026-11-24T17:15:48"
+}

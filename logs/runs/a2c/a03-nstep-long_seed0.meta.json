@@ -1,0 +1,62 @@
+{
+  "algo": "a2c",
+  "tag": "a03-nstep-long",
+  "seed": 0,
+  "config": {
+    "total_frames": 299008,
+    "hidden": [
+      256,
+      256
+    ],
+    "gamma": 0.99,
+    "max_grad_norm": 1.0,
+    "eval_episodes": 20,
+    "eval_every_frames": 25000,
+    "device": "auto",
+    "frames_per_batch": 2048,
+    "lr": 0.0007,
+    "entropy_coef": 0.01,
+    "critic_coef": 0.5,
+    "lmbda": 0.95,
+    "tag": "a03-nstep-long",
+    "note": "Long rollouts approach PPO's batch regime without the clipped objective -- a clean isolation of what clipping buys.",
+    "algo": "a2c"
+  },
+  "git_sha": "uncommitted",
+  "started": "2026-11-24T17:00:08",
+  "torch": "2.15.0+cpu",
+  "cuda": false,
+  "device_name": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "obs_dim": 35,
+  "n_actions": 13,
+  "train_seed_base": 0,
+  "eval_seed_base": 9000,
+  "summary": {
+    "eval_return_mean": -64.14732768194737,
+    "eval_return_std": 164.48782904188846,
+    "eval_equity_ratio": 0.9717834231618643,
+    "eval_drawdown": 0.06466147026799343,
+    "eval_stockouts": 3.225,
+    "eval_insolvency_rate": 0.15,
+    "action_distribution": {
+      "HOLD": 0.0001578365865207555,
+      "NGN_TO_USDT": 0.0005787341505761036,
+      "USDT_TO_NGN": 0.0008417951281106961,
+      "RWF_TO_USDT": 0.0,
+      "USDT_TO_RWF": 0.0,
+      "KES_TO_USDT": 0.119429683800705,
+      "USDT_TO_KES": 0.0035250170989635397,
+      "WIDEN_SPREAD": 0.30504550954911347,
+      "TIGHTEN_SPREAD": 0.00010522439101383701,
+      "PAUSE_NGN": 0.0,
+      "PAUSE_RWF": 0.0020518756247698217,
+      "PAUSE_KES": 0.00042089756405534805,
+      "RESUME_ALL": 0.5678434261061714
+    },
+    "score": -64.14732768194737,
+    "frames": 299008,
+    "wall_seconds": 941.1
+  },
+  "wall_seconds": 958.7,
+  "finished": "2026-11-24T17:16:07"
+}

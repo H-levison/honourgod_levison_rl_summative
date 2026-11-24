@@ -1,0 +1,62 @@
+{
+  "algo": "a2c",
+  "tag": "a05-lr-low",
+  "seed": 0,
+  "config": {
+    "total_frames": 299520,
+    "hidden": [
+      256,
+      256
+    ],
+    "gamma": 0.99,
+    "max_grad_norm": 1.0,
+    "eval_episodes": 20,
+    "eval_every_frames": 25000,
+    "device": "auto",
+    "frames_per_batch": 512,
+    "lr": 0.0002,
+    "entropy_coef": 0.01,
+    "critic_coef": 0.5,
+    "lmbda": 0.95,
+    "tag": "a05-lr-low",
+    "note": "Conservative steps to compensate for the missing trust region.",
+    "algo": "a2c"
+  },
+  "git_sha": "uncommitted",
+  "started": "2026-11-24T17:00:08",
+  "torch": "2.15.0+cpu",
+  "cuda": false,
+  "device_name": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "obs_dim": 35,
+  "n_actions": 13,
+  "train_seed_base": 0,
+  "eval_seed_base": 9000,
+  "summary": {
+    "eval_return_mean": -95.2536633537968,
+    "eval_return_std": 137.70396569727848,
+    "eval_equity_ratio": 0.9662233478568002,
+    "eval_drawdown": 0.06627569251913087,
+    "eval_stockouts": 23.0,
+    "eval_insolvency_rate": 0.15,
+    "action_distribution": {
+      "HOLD": 0.010139952468972802,
+      "NGN_TO_USDT": 0.05207288090837074,
+      "USDT_TO_NGN": 0.05159757063638764,
+      "RWF_TO_USDT": 0.032057037232637975,
+      "USDT_TO_RWF": 0.0,
+      "KES_TO_USDT": 0.17491418008978082,
+      "USDT_TO_KES": 0.0,
+      "WIDEN_SPREAD": 0.0,
+      "TIGHTEN_SPREAD": 0.0,
+      "PAUSE_NGN": 0.14734618431476101,
+      "PAUSE_RWF": 0.0,
+      "PAUSE_KES": 0.00031687351465540007,
+      "RESUME_ALL": 0.5315553208344336
+    },
+    "score": -95.2536633537968,
+    "frames": 299520,
+    "wall_seconds": 929.0
+  },
+  "wall_seconds": 946.8,
+  "finished": "2026-11-24T17:15:55"
+}

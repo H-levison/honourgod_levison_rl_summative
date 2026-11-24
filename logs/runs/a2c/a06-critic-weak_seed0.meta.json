@@ -1,0 +1,62 @@
+{
+  "algo": "a2c",
+  "tag": "a06-critic-weak",
+  "seed": 0,
+  "config": {
+    "total_frames": 299520,
+    "hidden": [
+      256,
+      256
+    ],
+    "gamma": 0.99,
+    "max_grad_norm": 1.0,
+    "eval_episodes": 20,
+    "eval_every_frames": 25000,
+    "device": "auto",
+    "frames_per_batch": 512,
+    "lr": 0.0007,
+    "entropy_coef": 0.01,
+    "critic_coef": 0.1,
+    "lmbda": 0.95,
+    "tag": "a06-critic-weak",
+    "note": "Under-trained critic means a poor baseline, pushing A2C back toward REINFORCE-like variance.",
+    "algo": "a2c"
+  },
+  "git_sha": "uncommitted",
+  "started": "2026-11-24T17:00:08",
+  "torch": "2.15.0+cpu",
+  "cuda": false,
+  "device_name": "AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD",
+  "obs_dim": 35,
+  "n_actions": 13,
+  "train_seed_base": 0,
+  "eval_seed_base": 9000,
+  "summary": {
+    "eval_return_mean": -30.36283008680818,
+    "eval_return_std": 142.09060245432383,
+    "eval_equity_ratio": 0.9905706088961418,
+    "eval_drawdown": 0.05081727879758487,
+    "eval_stockouts": 7.925,
+    "eval_insolvency_rate": 0.1,
+    "action_distribution": {
+      "HOLD": 0.00928981166556678,
+      "NGN_TO_USDT": 0.017259759378648664,
+      "USDT_TO_NGN": 0.0,
+      "RWF_TO_USDT": 0.0,
+      "USDT_TO_RWF": 0.009239047667394284,
+      "KES_TO_USDT": 0.18021219351236104,
+      "USDT_TO_KES": 0.0,
+      "WIDEN_SPREAD": 0.2987461292451393,
+      "TIGHTEN_SPREAD": 0.0,
+      "PAUSE_NGN": 0.054926646022640746,
+      "PAUSE_RWF": 0.003807299862937205,
+      "PAUSE_KES": 0.0,
+      "RESUME_ALL": 0.42651911264531195
+    },
+    "score": -30.36283008680818,
+    "frames": 299520,
+    "wall_seconds": 947.4
+  },
+  "wall_seconds": 965.4,
+  "finished": "2026-11-24T17:16:13"
+}
