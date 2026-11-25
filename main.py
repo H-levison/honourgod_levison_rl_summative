@@ -185,12 +185,28 @@ def cmd_demo(args: argparse.Namespace) -> int:
             print(STEP_HEADER)
 
             while True:
+                # Block here while the viewer has playback paused, so the
+                # simulation stops rather than running ahead unseen.
+                renderer.controls.wait_for_turn()
+
+                # Capture the policy's scores for THIS observation before the
+                # environment advances, so the panel shows the inputs to the
+                # decision rather than the state that followed it.
+                scorer = getattr(policy, "scores", None)
+                scores = list(scorer(obs)) if callable(scorer) else None
+                kind = getattr(policy, "score_kind", None)
+
                 action = int(policy(obs))
                 obs, reward, terminated, truncated, info = env.step(action)
                 total += reward
 
                 state = env.render_state()
                 state["policy"] = policy_name
+                state["policy_scores"] = scores
+                state["policy_score_kind"] = kind
+                state["playback"] = renderer.controls.snapshot()
+                state["episode_index"] = ep + 1
+                state["episode_return"] = total
                 state["done"] = terminated or truncated
                 state["verdict"] = "insolvent" if terminated else "complete"
                 renderer.push(state)
@@ -205,7 +221,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
                     time.sleep(args.hold)
                     break
 
-                time.sleep(delay)
+                time.sleep(delay / max(renderer.controls.speed, 0.01))
 
             ep += 1
 
@@ -400,6 +416,17 @@ def cmd_train(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_replicate(args: argparse.Namespace) -> int:
+    from training.runner import run_replication
+
+    run_replication(
+        seeds=tuple(range(args.seeds)),
+        episodes=args.episodes,
+        eval_seed_base=args.eval_seed,
+    )
+    return 0
+
+
 def cmd_sweep(args: argparse.Namespace) -> int:
     from training.runner import run_sweep
 
@@ -476,6 +503,19 @@ def build_parser() -> argparse.ArgumentParser:
     t.add_argument("--set", action="append", metavar="KEY=VALUE",
                    help="override a hyperparameter, repeatable")
     t.set_defaults(func=cmd_train)
+
+    # --- replicate ----------------------------------------------------------
+    rp = sub.add_parser(
+        "replicate",
+        help="retrain each algorithm's best configuration across several seeds",
+    )
+    rp.add_argument("--seeds", type=int, default=3,
+                    help="number of training seeds per configuration")
+    rp.add_argument("--episodes", type=int, default=100,
+                    help="held-out episodes used to score each checkpoint")
+    rp.add_argument("--eval-seed", type=int, default=20_000,
+                    help="first held-out seed, disjoint from model selection")
+    rp.set_defaults(func=cmd_replicate)
 
     # --- sweep --------------------------------------------------------------
     s = sub.add_parser("sweep", help="run an algorithm's hyperparameter grid")

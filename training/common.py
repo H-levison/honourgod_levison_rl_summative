@@ -443,14 +443,30 @@ def read_checkpoint_score(path: Path) -> float:
 class GreedyNetPolicy:
     """A saved network wrapped as a callable the demo and evaluator can use."""
 
-    def __init__(self, net: nn.Module, name: str) -> None:
+    def __init__(self, net: nn.Module, name: str, kind: str = "pg") -> None:
         self.net = net.eval()
         self.name = name
+        self.kind = kind
 
     @torch.no_grad()
     def __call__(self, obs: np.ndarray) -> int:
         x = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
         return int(self.net(x).argmax(dim=-1).item())
+
+    @torch.no_grad()
+    def scores(self, obs: np.ndarray) -> list[float]:
+        """
+        The network's raw output for this observation, one value per action.
+
+        Q-values for a DQN checkpoint, policy logits otherwise. Exposed so the
+        renderer can show the decision rather than only its outcome.
+        """
+        x = torch.as_tensor(obs, dtype=torch.float32).unsqueeze(0)
+        return [float(v) for v in self.net(x).squeeze(0)]
+
+    @property
+    def score_kind(self) -> str:
+        return "q" if self.kind == "dqn" else "logits"
 
 
 def load_policy(path: Path) -> GreedyNetPolicy:
@@ -471,4 +487,8 @@ def load_policy(path: Path) -> GreedyNetPolicy:
         )
     net = build_mlp(blob["obs_dim"], blob["n_actions"], blob["hidden"])
     net.load_state_dict(blob["state_dict"])
-    return GreedyNetPolicy(net, name=blob["algo"].upper())
+    return GreedyNetPolicy(
+        net,
+        name=blob["algo"].upper(),
+        kind=("dqn" if blob.get("algo") == "dqn" else "pg"),
+    )

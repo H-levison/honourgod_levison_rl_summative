@@ -36,6 +36,7 @@ import json
 import os
 import socketserver
 import threading
+import time
 import webbrowser
 from pathlib import Path
 from typing import Any
@@ -86,6 +87,100 @@ PORT_ATTEMPTS = 25
 # Renderer
 # --------------------------------------------------------------------------- #
 
+class PlaybackControls:
+    """
+    Playback state the browser can drive, read by the simulation thread.
+
+    The renderer runs its event loop on its own thread while the environment
+    steps on the main one, so every field here is touched from two threads and
+    guarded accordingly. Pausing deliberately blocks the stepping thread rather
+    than buffering frames: a paused simulation should stop, not run ahead
+    invisibly and flood the scene on resume.
+    """
+
+    MIN_SPEED = 0.25
+    MAX_SPEED = 8.0
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._paused = False
+        self._step_once = False
+        self._speed = 1.0
+
+    @property
+    def paused(self) -> bool:
+        with self._lock:
+            return self._paused
+
+    @property
+    def speed(self) -> float:
+        with self._lock:
+            return self._speed
+
+    def pause(self) -> None:
+        with self._lock:
+            self._paused = True
+
+    def resume(self) -> None:
+        with self._lock:
+            self._paused = False
+            self._step_once = False
+
+    def toggle(self) -> None:
+        with self._lock:
+            self._paused = not self._paused
+            if not self._paused:
+                self._step_once = False
+
+    def request_step(self) -> None:
+        """Advance exactly one step, then pause again."""
+        with self._lock:
+            self._paused = True
+            self._step_once = True
+
+    def set_speed(self, value: float) -> None:
+        with self._lock:
+            self._speed = max(self.MIN_SPEED, min(self.MAX_SPEED, float(value)))
+
+    def wait_for_turn(self, poll: float = 0.04) -> None:
+        """
+        Block until the next step is allowed.
+
+        Returns immediately when running. While paused it waits for either a
+        resume or a single-step request, so the simulation thread parks here
+        instead of spinning.
+        """
+        while True:
+            with self._lock:
+                if not self._paused:
+                    return
+                if self._step_once:
+                    self._step_once = False
+                    return
+            time.sleep(poll)
+
+    def snapshot(self) -> dict[str, Any]:
+        """Authoritative state, echoed in each frame so the UI can sync."""
+        with self._lock:
+            return {"paused": self._paused, "speed": self._speed}
+
+    def apply(self, payload: dict[str, Any]) -> None:
+        cmd = str(payload.get("cmd", ""))
+        if cmd == "pause":
+            self.pause()
+        elif cmd == "resume":
+            self.resume()
+        elif cmd == "toggle":
+            self.toggle()
+        elif cmd == "step":
+            self.request_step()
+        elif cmd == "speed" and "value" in payload:
+            # A speed command with no value is malformed, not a request to
+            # reset: ignore it rather than silently snapping back to 1x.
+            with contextlib.suppress(TypeError, ValueError):
+                self.set_speed(payload["value"])
+
+
 class DeskRenderer:
     """Serves the Three.js scene and streams environment state to it."""
 
@@ -128,6 +223,9 @@ class DeskRenderer:
 
         # runtime errors reported back by the browser scene
         self.scene_errors: list[dict[str, Any]] = []
+
+        # playback state the scene's control bar drives
+        self.controls = PlaybackControls()
 
     # ------------------------------------------------------------------ #
     # Public API
@@ -305,6 +403,9 @@ class DeskRenderer:
                 except (TypeError, ValueError):
                     continue
                 if not isinstance(payload, dict):
+                    continue
+                if payload.get("type") == "control":
+                    self.controls.apply(payload)
                     continue
                 if payload.get("type") == "error":
                     label = payload.get("label", "error")

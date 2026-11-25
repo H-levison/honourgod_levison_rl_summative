@@ -32,6 +32,36 @@
 
   #gl { position: fixed; inset: 0; display: block; }
 
+  /* Two vertical rails hold the side cards. Flex layout means a card can
+     never land on top of its neighbour, whatever the viewport height or how
+     many rows the policy panel needs. */
+  .rail {
+    position: fixed;
+    top: 18px;
+    bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+    z-index: 20;
+  }
+  #railL { left: 18px; width: 330px; }
+  #railR { right: 18px; width: 236px; }
+  /* history sits at the foot of the rail; the market card floats above it */
+  #history { margin-top: auto; }
+
+  /* Inside a rail the cards are flow items, not fixed boxes. */
+  .rail > .hud {
+    position: relative;
+    top: auto; right: auto; bottom: auto; left: auto;
+    width: auto;
+    flex: 0 0 auto;
+  }
+  /* The feed sits at the foot of the rail; the policy panel absorbs the gap
+     and is the only card permitted to shrink. */
+  #feed { margin-top: auto; }
+  #brain { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+
   .hud {
     position: fixed;
     pointer-events: none;
@@ -57,7 +87,7 @@
   }
 
   /* ---- title card -------------------------------------------------- */
-  #title { top: 18px; left: 18px; max-width: 330px; }
+
   #title h1 {
     margin: 0 0 6px;
     font-size: 15px;
@@ -80,7 +110,7 @@
   #policy b { color: var(--usdt); font-weight: 600; }
 
   /* ---- metrics ----------------------------------------------------- */
-  #metrics { top: 18px; right: 18px; width: 236px; }
+
   .row {
     display: flex;
     justify-content: space-between;
@@ -96,7 +126,7 @@
   .neg { color: var(--warn); }
 
   /* ---- action feed ------------------------------------------------- */
-  #feed { bottom: 18px; left: 18px; width: 276px; }
+
   #feedlist { font-size: 11px; line-height: 1.75; }
   #feedlist div { display: flex; justify-content: space-between; gap: 10px; }
   #feedlist .t { color: var(--dim); min-width: 34px; }
@@ -107,7 +137,7 @@
 
   /* ---- progress ---------------------------------------------------- */
   #progress {
-    bottom: 18px;
+    bottom: 74px;
     left: 50%;
     transform: translateX(-50%);
     width: 430px;
@@ -135,7 +165,7 @@
   }
 
   /* ---- corridor legend --------------------------------------------- */
-  #legend { bottom: 18px; right: 18px; width: 210px; }
+
   .corridor {
     display: flex;
     align-items: center;
@@ -230,7 +260,7 @@
   #crash b { color: var(--warn); }
 
   /* ---- agent status (mission control) ------------------------------ */
-  #agent { top: 188px; left: 18px; width: 330px; }
+
   #agent .who {
     display: flex;
     align-items: center;
@@ -266,7 +296,44 @@
   }
 
   /* ---- devaluation pressure ---------------------------------------- */
-  #risk { top: 352px; right: 18px; width: 236px; }
+
+
+  #brain .hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 7px;
+  }
+  #brain .hdr .k { font-size: 10px; color: var(--dim); letter-spacing: 0.06em; }
+  #brainrows { font-size: 10px; }
+  .brow {
+    display: grid;
+    grid-template-columns: 92px 1fr 40px;
+    align-items: center;
+    gap: 7px;
+    padding: 0.5px 0;
+    color: var(--dim);
+    transition: color 0.15s;
+  }
+  .brow.on { color: #fff; font-weight: 600; }
+  .brow .bar {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+  }
+  .brow .fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #0e7490, var(--usdt));
+    transition: width 0.18s ease-out;
+  }
+  .brow.on .fill {
+    background: linear-gradient(90deg, #15803d, #22c55e);
+    box-shadow: 0 0 9px rgba(34, 197, 94, 0.6);
+  }
+  .brow .v { text-align: right; font-variant-numeric: tabular-nums; }
+  #brain .none { font-size: 11px; color: var(--dim); line-height: 1.5; }
   .gauge { margin: 7px 0; }
   .gauge .top {
     display: flex;
@@ -288,6 +355,92 @@
   }
 
   /* ---- devaluation alert ------------------------------------------- */
+  #impact {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 40;
+    background:
+      radial-gradient(ellipse at center,
+        rgba(244, 63, 94, 0) 35%,
+        rgba(244, 63, 94, 0.30) 78%,
+        rgba(190, 18, 60, 0.55) 100%);
+  }
+  @keyframes hintfade { to { opacity: 0; } }
+
+
+  /* Controls are the one part of the HUD that accepts the mouse. */
+  #controls {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    pointer-events: auto;
+    z-index: 30;
+  }
+  .btn {
+    pointer-events: auto;
+    appearance: none;
+    border: 1px solid var(--edge);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--ink);
+    font: inherit;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.14s, border-color 0.14s, color 0.14s;
+  }
+  .btn:hover { background: rgba(255, 255, 255, 0.12); border-color: #5b6878; }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary {
+    background: linear-gradient(135deg, #0e7490, var(--usdt));
+    border-color: transparent;
+    color: #04121a;
+    font-weight: 700;
+    min-width: 92px;
+  }
+  .btn.primary.paused {
+    background: linear-gradient(135deg, #15803d, #22c55e);
+  }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  #speedlabel {
+    font-size: 11px;
+    color: var(--dim);
+    min-width: 42px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  #controls .divider {
+    width: 1px;
+    height: 20px;
+    background: var(--edge);
+    margin: 0 2px;
+  }
+
+  /* Completed weeks, accumulated by the page itself. */
+  #historyrows { font-size: 10.5px; }
+  #historyrows .hrow {
+    display: grid;
+    grid-template-columns: 34px 1fr 54px;
+    gap: 7px;
+    padding: 2px 0;
+    align-items: baseline;
+  }
+  #historyrows .w { color: var(--dim); }
+  #historyrows .o { font-size: 9.5px; letter-spacing: 0.05em; }
+  #historyrows .o.ok { color: #22c55e; }
+  #historyrows .o.bad { color: #f43f5e; }
+  #historyrows .s { text-align: right; font-variant-numeric: tabular-nums; }
+  #historyrows .empty { color: var(--dim); font-size: 10.5px; }
+
   #alert {
     position: fixed;
     top: 86px;
@@ -311,9 +464,10 @@
 
   #hint {
     position: fixed;
-    top: 50%;
-    left: 18px;
-    transform: translateY(-50%);
+    bottom: 136px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: hintfade 1.2s ease-in 9s forwards;
     font-size: 10px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -335,68 +489,95 @@
 <body>
 <canvas id="gl"></canvas>
 
-<!-- problem statement, for the demo narration -->
-<div class="hud" id="title">
-  <h1>Cross-Border Liquidity Desk</h1>
-  <p>
-    An RL treasury agent routes inventory across NGN, RWF, KES and a USDT
-    settlement rail. It must keep every corridor fillable for a trading week
-    while FX moves against the book.
-  </p>
-  <div id="policy">Policy: <b id="polname">waiting…</b></div>
-</div>
+<!-- Left rail: the problem, the agent, its decision, its history. -->
+<div class="rail" id="railL">
+  <div class="hud" id="title">
+    <h1>Cross-Border Liquidity Desk</h1>
+    <p>
+      An RL treasury agent routes inventory across NGN, RWF, KES and a USDT
+      settlement rail. It must keep every corridor fillable for a trading week
+      while FX moves against the book.
+    </p>
+    <div id="policy">Policy: <b id="polname">waiting…</b></div>
+  </div>
 
-<!-- the agent itself -->
-<div class="hud" id="agent">
-  <div class="who">
-    <div class="chip"></div>
-    <div>
-      <div class="nm" id="agentname">Desk Operator</div>
-      <div class="st" id="agentstate">STANDING BY</div>
+  <div class="hud" id="agent">
+    <div class="who">
+      <div class="chip"></div>
+      <div>
+        <div class="nm" id="agentname">Desk Operator</div>
+        <div class="st" id="agentstate">STANDING BY</div>
+      </div>
+    </div>
+    <div class="mono" id="doing">—</div>
+  </div>
+
+  <div class="hud" id="brain">
+    <div class="hdr">
+      <div class="label">Policy decision</div>
+      <div class="k" id="brainkind">—</div>
+    </div>
+    <div id="brainrows"></div>
+    <div class="none" id="brainnone">
+      Rule-based policy &mdash; no learned action values to display.
     </div>
   </div>
-  <div class="mono" id="doing">—</div>
+
+  <div class="hud" id="feed">
+    <div class="label">Agent actions</div>
+    <div class="mono" id="feedlist"></div>
+  </div>
 </div>
 
-<!-- live book metrics -->
-<div class="hud" id="metrics">
-  <div class="label">Net equity (USD)</div>
-  <div class="big mono" id="equity">—</div>
-  <div class="row"><span>P&amp;L</span><span class="mono" id="pnl">—</span></div>
-  <div class="sep"></div>
-  <div class="row"><span>Drawdown</span><span class="mono" id="dd">—</span></div>
-  <div class="row"><span>Quoted spread</span><span class="mono" id="spread">—</span></div>
-  <div class="sep"></div>
-  <div class="row"><span>Fees paid</span><span class="mono" id="fees">—</span></div>
-  <div class="row"><span>Filled</span><span class="mono" id="filled">—</span></div>
-  <div class="row"><span>Stockouts</span><span class="mono" id="stockouts">—</span></div>
+<!-- Right rail: the book, the risk it carries, the market it faces. -->
+<div class="rail" id="railR">
+  <div class="hud" id="metrics">
+    <div class="label">Net equity (USD)</div>
+    <div class="big mono" id="equity">—</div>
+    <div class="row"><span>P&amp;L</span><span class="mono" id="pnl">—</span></div>
+    <div class="sep"></div>
+    <div class="row"><span>Drawdown</span><span class="mono" id="dd">—</span></div>
+    <div class="row"><span>Quoted spread</span><span class="mono" id="spread">—</span></div>
+    <div class="sep"></div>
+    <div class="row"><span>Fees paid</span><span class="mono" id="fees">—</span></div>
+    <div class="row"><span>Filled</span><span class="mono" id="filled">—</span></div>
+    <div class="row"><span>Stockouts</span><span class="mono" id="stockouts">—</span></div>
+  </div>
+
+  <div class="hud" id="risk">
+    <div class="label">Devaluation pressure</div>
+    <div id="gauges"></div>
+  </div>
+
+  <div class="hud" id="legend">
+    <div class="label">Corridors vs. USD</div>
+    <div id="corridors"></div>
+  </div>
+
+  <div class="hud" id="history">
+    <div class="label">Completed weeks</div>
+    <div id="historyrows"><div class="empty">No week finished yet.</div></div>
+  </div>
 </div>
 
-<!-- what the agent just did -->
-<div class="hud" id="feed">
-  <div class="label">Agent actions</div>
-  <div class="mono" id="feedlist"></div>
+<!-- Centred and full-screen elements sit outside both rails. -->
+<div id="impact"></div>
+
+<div class="hud" id="controls">
+  <button class="btn primary" id="btnplay" type="button">Pause</button>
+  <button class="btn" id="btnstep" type="button" title="Advance one step">Step</button>
+  <div class="divider"></div>
+  <button class="btn" id="btnslower" type="button">&minus;</button>
+  <div id="speedlabel">1.0&times;</div>
+  <button class="btn" id="btnfaster" type="button">+</button>
 </div>
 
-<!-- episode progress -->
 <div class="hud" id="progress">
   <div id="bar"><div id="barfill"></div></div>
   <div id="ptext" class="mono">
     <span id="stepcount">step 0 / 0</span>
     <span id="reward">reward —</span>
   </div>
-</div>
-
-<!-- corridors -->
-<div class="hud" id="legend">
-  <div class="label">Corridors vs. USD</div>
-  <div id="corridors"></div>
-</div>
-
-<!-- devaluation pressure: the leading indicator the agent trades on -->
-<div class="hud" id="risk">
-  <div class="label">Devaluation pressure</div>
-  <div id="gauges"></div>
 </div>
 
 <div id="alert">⚠ DEVALUATION — <span id="alertccy"></span></div>

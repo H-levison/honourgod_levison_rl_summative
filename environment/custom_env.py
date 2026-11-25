@@ -683,6 +683,9 @@ class LiquidityDeskEnv(gym.Env):
             ),
             "action": int(self._last_action),
             "action_name": ACTION_NAMES[self._last_action],
+            # The full vocabulary travels with the frame so the renderer never
+            # keeps its own copy of the action list to drift out of sync.
+            "action_names": list(ACTION_NAMES),
             "reward": float(self._last_reward),
             "rebalance": (
                 None

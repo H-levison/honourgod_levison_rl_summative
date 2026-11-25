@@ -810,6 +810,245 @@ function signed(x, digits = 2) {
   return `${x >= 0 ? '+' : ''}${x.toFixed(digits)}`;
 }
 
+
+// --------------------------------------------------------------------------
+// Policy panel: the decision, not just the outcome.
+// --------------------------------------------------------------------------
+let brainRows = null;
+
+function buildBrainRows(names) {
+  const host = el('brainrows');
+  if (!host) return null;
+  host.innerHTML = '';
+  const rows = names.map((raw) => {
+    const name = raw.replace(/_/g, ' ');
+    const row = document.createElement('div');
+    row.className = 'brow';
+    const label = document.createElement('div');
+    label.textContent = name;
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    const fill = document.createElement('div');
+    fill.className = 'fill';
+    fill.style.width = '0%';
+    bar.appendChild(fill);
+    const value = document.createElement('div');
+    value.className = 'v';
+    value.textContent = '—';
+    row.append(label, bar, value);
+    host.appendChild(row);
+    return { row, fill, value };
+  });
+  return rows;
+}
+
+
+// --------------------------------------------------------------------------
+// Devaluation impact. The event the entire policy exists to anticipate should
+// be felt, not merely logged: a short camera shake plus a red screen flash.
+// --------------------------------------------------------------------------
+let shake = 0;
+let devaluationWasActive = false;
+
+function triggerImpact() {
+  shake = 1.0;
+  const f = el('impact');
+  if (!f) return;
+  // Snap to full opacity, then let CSS fade it out.
+  f.style.transition = 'none';
+  f.style.opacity = '0.9';
+  requestAnimationFrame(() => {
+    f.style.transition = 'opacity 1100ms cubic-bezier(0.2, 0, 0.3, 1)';
+    f.style.opacity = '0';
+  });
+}
+
+function checkImpact(state) {
+  const active = (state.devaluation || []).some(Boolean);
+  if (active && !devaluationWasActive) triggerImpact();
+  devaluationWasActive = active;
+}
+
+function applyShake(dt) {
+  if (shake <= 0) return;
+  // Applied after controls.update(), which rebuilds the camera position from
+  // the orbit state each frame, so this offset never accumulates.
+  const amp = shake * shake * 0.42;
+  camera.position.x += (Math.random() - 0.5) * amp;
+  camera.position.y += (Math.random() - 0.5) * amp;
+  camera.position.z += (Math.random() - 0.5) * amp;
+  camera.lookAt(controls.target);
+  shake = Math.max(0, shake - dt * 1.9);
+}
+
+
+// --------------------------------------------------------------------------
+// Playback controls and episode history.
+//
+// Commands travel back over the same socket that carries diagnostics. The
+// server is authoritative: a click sends an intent and the button settles to
+// whatever the next frame reports, so the UI cannot drift out of step with
+// the simulation.
+// --------------------------------------------------------------------------
+let playbackPaused = false;
+let playbackSpeed = 1.0;
+
+function sendControl(cmd, value) {
+  const payload = { type: 'control', cmd };
+  if (value !== undefined) payload.value = value;
+  try {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(payload));
+    }
+  } catch (err) {
+    reportError('control', err);
+  }
+}
+
+function renderPlayback() {
+  const play = el('btnplay');
+  const step = el('btnstep');
+  const label = el('speedlabel');
+  if (play) {
+    play.textContent = playbackPaused ? 'Resume' : 'Pause';
+    play.classList.toggle('paused', playbackPaused);
+  }
+  if (step) step.disabled = !playbackPaused;
+  if (label) label.textContent = `${playbackSpeed.toFixed(1)}\u00d7`;
+}
+
+function bindControls() {
+  const play = el('btnplay');
+  const step = el('btnstep');
+  const slower = el('btnslower');
+  const faster = el('btnfaster');
+
+  if (play) play.addEventListener('click', () => {
+    playbackPaused = !playbackPaused;      // optimistic; the next frame confirms
+    renderPlayback();
+    sendControl('toggle');
+  });
+  if (step) step.addEventListener('click', () => sendControl('step'));
+  if (slower) slower.addEventListener('click', () => {
+    playbackSpeed = Math.max(0.25, playbackSpeed / 2);
+    renderPlayback();
+    sendControl('speed', playbackSpeed);
+  });
+  if (faster) faster.addEventListener('click', () => {
+    playbackSpeed = Math.min(8, playbackSpeed * 2);
+    renderPlayback();
+    sendControl('speed', playbackSpeed);
+  });
+
+  // Space toggles, right-arrow steps -- the shortcuts anyone recording a
+  // walkthrough will reach for.
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (play) play.click();
+    } else if (e.code === 'ArrowRight' && playbackPaused) {
+      e.preventDefault();
+      sendControl('step');
+    }
+  });
+  renderPlayback();
+}
+
+function syncPlayback(state) {
+  const pb = state.playback;
+  if (!pb) return;
+  const changed = pb.paused !== playbackPaused || pb.speed !== playbackSpeed;
+  playbackPaused = !!pb.paused;
+  playbackSpeed = Number(pb.speed) || 1.0;
+  if (changed) renderPlayback();
+}
+
+// --- completed weeks ------------------------------------------------------
+const weeks = [];
+let lastWeekRecorded = -1;
+
+function updateHistory(state) {
+  if (!state.done) return;
+  const idx = state.episode_index;
+  if (idx === undefined || idx === lastWeekRecorded) return;
+  lastWeekRecorded = idx;
+
+  weeks.unshift({
+    n: idx,
+    ret: state.episode_return,
+    ok: state.verdict !== 'insolvent',
+    equity: state.equity_usd / state.initial_equity_usd - 1,
+  });
+  if (weeks.length > 8) weeks.pop();
+
+  const host = el('historyrows');
+  if (!host) return;
+  host.innerHTML = '';
+  weeks.forEach((w) => {
+    const row = document.createElement('div');
+    row.className = 'hrow';
+    const ret = typeof w.ret === 'number' ? w.ret.toFixed(1) : '—';
+    row.innerHTML = `<span class="w">wk ${w.n}</span>`
+      + `<span class="o ${w.ok ? 'ok' : 'bad'}">`
+      + `${w.ok ? 'SURVIVED' : 'INSOLVENT'} ${(w.equity * 100).toFixed(2)}%</span>`
+      + `<span class="s">${ret}</span>`;
+    host.appendChild(row);
+  });
+}
+
+function updateBrain(state) {
+  const host = el('brainrows');
+  const none = el('brainnone');
+  const kindEl = el('brainkind');
+  if (!host || !none) return;
+
+  const names = state.action_names;
+  const scores = state.policy_scores;
+  if (!Array.isArray(scores) || !Array.isArray(names)
+      || scores.length !== names.length) {
+    host.style.display = 'none';
+    none.style.display = 'block';
+    if (kindEl) kindEl.textContent = 'RULE-BASED';
+    return;
+  }
+  host.style.display = 'block';
+  none.style.display = 'none';
+
+  if (!brainRows) brainRows = buildBrainRows(names);
+  if (!brainRows) return;
+
+  const isQ = state.policy_score_kind === 'q';
+  if (kindEl) kindEl.textContent = isQ ? 'Q-VALUES' : 'ACTION PROBABILITY';
+
+  // For logits, a softmax is the policy's actual distribution. For Q-values a
+  // softmax would be meaningless, so the bar is min-max scaled instead and the
+  // label shows the raw action value.
+  let display;
+  let widths;
+  if (isQ) {
+    const lo = Math.min(...scores);
+    const hi = Math.max(...scores);
+    const span = hi - lo || 1;
+    widths = scores.map((s) => (s - lo) / span);
+    display = scores.map((s) => s.toFixed(1));
+  } else {
+    const hi = Math.max(...scores);
+    const exps = scores.map((s) => Math.exp(s - hi));
+    const sum = exps.reduce((a, b) => a + b, 0) || 1;
+    const probs = exps.map((e) => e / sum);
+    widths = probs.slice();
+    display = probs.map((p) => `${(p * 100).toFixed(0)}%`);
+  }
+
+  const chosen = scores.indexOf(Math.max(...scores));
+  for (let i = 0; i < brainRows.length; i += 1) {
+    const r = brainRows[i];
+    r.fill.style.width = `${Math.max(0, Math.min(1, widths[i])) * 100}%`;
+    r.value.textContent = display[i];
+    r.row.classList.toggle('on', i === chosen);
+  }
+}
+
 function updateHud(state) {
   const equity = state.equity_usd;
   const pnl = equity / state.initial_equity_usd - 1.0;
@@ -940,6 +1179,10 @@ function hideVerdict() {
 let latest = null;
 
 function applyState(state) {
+  updateBrain(state);
+  checkImpact(state);
+  syncPlayback(state);
+  updateHistory(state);
   // a new episode has started: clear the previous verdict and the FX history
   if (latest && state.t < latest.t) {
     hideVerdict();
@@ -1102,6 +1345,7 @@ function animate() {
   animateAgent(dt, time);
 
   controls.update();
+  applyShake(dt);
   composer.render();
 }
 
@@ -1120,6 +1364,8 @@ function frame() {
   }
   requestAnimationFrame(frame);
 }
+
+bindControls();
 
 frame();
 
@@ -1144,6 +1390,8 @@ window.addEventListener('resize', () => {
 const wsPort = new URLSearchParams(window.location.search).get('ws') || '8766';
 const wsUrl = `ws://${window.location.hostname}:${wsPort}`;
 let attempts = 0;
+// The control bar posts commands back on whichever socket is live.
+let socket = null;
 
 function connect() {
   el('waithint').textContent = attempts
@@ -1151,6 +1399,7 @@ function connect() {
     : wsUrl;
 
   const ws = new WebSocket(wsUrl);
+  socket = ws;
 
   ws.onopen = () => {
     attempts = 0;
@@ -1172,6 +1421,7 @@ function connect() {
   ws.onclose = () => {
     attempts += 1;
     errorSink = null;
+    if (socket === ws) socket = null;
     if (!latest) el('waiting').style.display = 'flex';
     setTimeout(connect, Math.min(500 * attempts, 4000));
   };
