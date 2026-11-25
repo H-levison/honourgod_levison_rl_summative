@@ -461,6 +461,85 @@ def fig_action_distribution() -> None:
     _save(fig, "06_action_distribution.png")
 
 
+
+# --------------------------------------------------------------------------- #
+# 7. seed replication
+# --------------------------------------------------------------------------- #
+
+def load_replication() -> pd.DataFrame | None:
+    path = LOGS_DIR / "seed_replication.csv"
+    if not path.exists():
+        return None
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return None
+
+
+def fig_seed_replication() -> None:
+    """
+    Every seed as its own point, so the reader can see the spread rather than
+    trust a mean. Reference lines are the rule-based policies on the same seeds.
+    """
+    rep = load_replication()
+    if rep is None or rep.empty:
+        return
+    final = load_final_evaluation()
+
+    order = [a for a in ALGOS if a in set(rep["algo"])]
+    order.sort(key=lambda a: rep.loc[rep["algo"] == a, "held_out_score"].mean())
+
+    fig, ax = plt.subplots(figsize=(7.8, 0.52 * len(order) + 1.9))
+
+    # rule-based references as vertical lines
+    if final is not None:
+        for name, style in (("hold", ":"), ("heuristic", "--")):
+            row = final[final["policy"].str.lower() == name]
+            if row.empty:
+                continue
+            x = float(row["return_mean"].iloc[0])
+            ax.axvline(x, color="#64748b", ls=style, lw=1.2, zorder=1)
+            # Axes-fraction y keeps the label clear of the title and of the
+            # topmost row, whatever the number of algorithms.
+            ax.text(x, 0.015, f"{row['label'].iloc[0]} ",
+                    transform=ax.get_xaxis_transform(),
+                    rotation=90, va="bottom", ha="right",
+                    fontsize=7.5, color="#475569")
+
+    for y, algo in enumerate(order):
+        vals = rep.loc[rep["algo"] == algo, "held_out_score"].to_numpy(dtype=float)
+        mean = vals.mean()
+        colour = COLOURS[algo]
+        # the range, then each seed, then the mean on top
+        ax.plot([vals.min(), vals.max()], [y, y], color=colour, lw=2.2,
+                alpha=0.35, solid_capstyle="round", zorder=2)
+        ax.scatter(vals, [y] * len(vals), s=34, color=colour,
+                   edgecolor="white", linewidth=0.8, zorder=3)
+        ax.scatter([mean], [y], s=150, marker="|", color=colour,
+                   linewidth=2.4, zorder=4)
+        sd = vals.std(ddof=1) if len(vals) > 1 else 0.0
+        ax.text(vals.max() + 4, y, f"{mean:+.1f} ± {sd:.1f}",
+                va="center", fontsize=8, fontweight="bold", color=colour)
+
+    ax.set_yticks(range(len(order)))
+    ax.set_yticklabels(
+        [f"{LABELS[a]}\n{rep.loc[rep['algo'] == a, 'tag'].iloc[0]}" for a in order],
+        fontsize=8,
+    )
+    ax.axvline(0, color="#334155", lw=0.9, zorder=1)
+    n_seeds = int(rep.groupby("algo").size().max())
+    ax.set_xlabel(
+        f"mean episode return on the held-out set "
+        f"(one point per training seed, n={n_seeds})"
+    )
+    ax.set_title(
+        "Seed replication: does the ranking survive a change of training seed?",
+        fontsize=9.5,
+    )
+    ax.margins(x=0.16)
+    _save(fig, "07_seed_replication.png")
+
+
 # --------------------------------------------------------------------------- #
 
 def _save(fig, name: str) -> None:
@@ -478,6 +557,7 @@ def make_all(baselines: dict[str, float] | None = None) -> None:
     fig_pg_entropy()
     fig_convergence()
     fig_generalisation()
+    fig_seed_replication()
     fig_action_distribution()
 
 

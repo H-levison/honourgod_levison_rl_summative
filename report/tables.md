@@ -33,6 +33,20 @@ Paired because the FX path is common to every policy on a given seed and control
 
 *Idle* is a conservative floor on how often a policy does nothing. `RESUME_ALL` clears every pause flag, so with nothing paused it is a second no-op, identical in effect to `HOLD` -- and the policy-gradient agents settled on it rather than on `HOLD`. A resume can only act if a pause preceded it, so `idle >= HOLD + max(0, resume - pause)`. Read without this correction the action histogram suggests REINFORCE spends its week managing corridors, when most of its steps change nothing.
 
+
+## Seed replication
+
+Each algorithm's winning configuration retrained across 3 seeds. The sweep itself ran one seed per configuration, which cannot separate a better algorithm from a luckier initialisation.
+
+| Algorithm | Configuration | Mean | Std. dev. | Worst seed | Best seed | Beats heuristic? |
+|---|---|---:|---:|---:|---:|---:|
+| **PPO** | `p06-lambda-low` | +15.33 | 18.87 | +0.3 | +36.5 | yes |
+| **A2C** | `a06-critic-weak` | -44.24 | 2.43 | -46.8 | -42.0 | yes |
+| **REINFORCE** | `r01-baseline` | -92.72 | 60.13 | -155.3 | -35.4 | **no** |
+| **DQN** | `d09-batch-large` | -100.27 | 30.83 | -135.7 | -79.6 | **no** |
+
+PPO's *worst* seed still beats every other algorithm's *best* seed. REINFORCE's spread is the widest in the study and its mean falls below the hand-written heuristic, so its rank in the single-seed scoreboard was not reproducible -- which is what Figure 3's flat entropy predicts for a policy that never commits.
+
 ## Hyperparameter study
 
 

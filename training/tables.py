@@ -166,6 +166,55 @@ def headline_table() -> str:
     return "\n".join(out)
 
 
+
+def replication_table() -> str:
+    """
+    How much of the ranking is the algorithm, and how much is the seed?
+
+    One row per algorithm, covering its winning configuration retrained across
+    several seeds and re-scored on the same held-out episodes as the
+    scoreboard above.
+    """
+    df = _read(LOGS_DIR / "seed_replication.csv")
+    if df is None or df.empty:
+        return ""
+    final = _read(LOGS_DIR / "final_evaluation.csv")
+    heur = None
+    if final is not None:
+        row = final[final["policy"].str.lower() == "heuristic"]
+        if not row.empty:
+            heur = float(row["return_mean"].iloc[0])
+
+    n = int(df.groupby("algo").size().max())
+    out = [
+        "\n## Seed replication\n",
+        f"Each algorithm's winning configuration retrained across {n} seeds. "
+        "The sweep itself ran one seed per configuration, which cannot "
+        "separate a better algorithm from a luckier initialisation.\n",
+        "| Algorithm | Configuration | Mean | Std. dev. | Worst seed | "
+        "Best seed | Beats heuristic? |",
+        "|---|---|---:|---:|---:|---:|---:|",
+    ]
+    order = sorted(set(df["algo"]),
+                   key=lambda a: -df.loc[df["algo"] == a, "held_out_score"].mean())
+    for algo in order:
+        v = df.loc[df["algo"] == algo, "held_out_score"].to_numpy(dtype=float)
+        tag = df.loc[df["algo"] == algo, "tag"].iloc[0]
+        beats = "—" if heur is None else ("yes" if v.mean() > heur else "**no**")
+        out.append(
+            f"| **{LABELS[algo]}** | `{tag}` | {v.mean():+.2f} | {v.std(ddof=1):.2f} "
+            f"| {v.min():+.1f} | {v.max():+.1f} | {beats} |"
+        )
+    out.append(
+        "\nPPO's *worst* seed still beats every other algorithm's *best* seed. "
+        "REINFORCE's spread is the widest in the study and its mean falls below "
+        "the hand-written heuristic, so its rank in the single-seed scoreboard "
+        "was not reproducible -- which is what Figure 3's flat entropy predicts "
+        "for a policy that never commits.\n"
+    )
+    return "\n".join(out)
+
+
 def main() -> int:
     parts = [
         "# Generated tables\n",
@@ -174,6 +223,7 @@ def main() -> int:
         "its evidence cannot drift apart.\n",
         headline_table(),
         scoreboard_table(),
+        replication_table(),
         hyperparameter_tables(),
     ]
     text = "\n".join(p for p in parts if p)
