@@ -14,6 +14,8 @@ silently going blank.
 from __future__ import annotations
 
 import asyncio
+import threading
+import time
 import json
 import urllib.error
 import urllib.request
@@ -102,7 +104,7 @@ REQUIRED_KEYS = {
     "pool_fill", "rates", "rate_change", "vol_regime", "devaluation", "flow",
     "paused", "pressure", "hazard", "spread", "equity_usd", "initial_equity_usd",
     "high_water_usd",
-    "drawdown", "action", "action_name", "reward", "rebalance",
+    "drawdown", "action", "action_name", "action_names", "reward", "rebalance",
     "pending_order", "stats",
 }
 
@@ -199,3 +201,132 @@ def test_two_renderers_do_not_fight_over_ports():
     finally:
         a.stop()
         b.stop()
+
+# --------------------------------------------------------------------------- #
+# Playback controls
+#
+# The simulation thread blocks inside wait_for_turn() while the renderer's
+# event loop applies commands from another thread, so these cover the handover
+# as well as the state machine.
+# --------------------------------------------------------------------------- #
+
+def test_controls_run_freely_by_default():
+    from environment.rendering import PlaybackControls
+
+    c = PlaybackControls()
+    assert not c.paused
+    start = time.perf_counter()
+    for _ in range(50):
+        c.wait_for_turn()
+    assert time.perf_counter() - start < 0.5, "running playback should not block"
+
+
+def test_pause_blocks_until_resumed():
+    from environment.rendering import PlaybackControls
+
+    c = PlaybackControls()
+    c.pause()
+    released = threading.Event()
+
+    def worker():
+        c.wait_for_turn()
+        released.set()
+
+    th = threading.Thread(target=worker, daemon=True)
+    th.start()
+    assert not released.wait(0.3), "wait_for_turn returned while paused"
+
+    c.resume()
+    assert released.wait(2.0), "resume did not release the waiter"
+    th.join(timeout=2.0)
+
+
+def test_step_releases_exactly_one_turn():
+    from environment.rendering import PlaybackControls
+
+    c = PlaybackControls()
+    c.pause()
+    turns = []
+    stop = threading.Event()
+
+    def worker():
+        while not stop.is_set():
+            c.wait_for_turn()
+            turns.append(1)
+
+    th = threading.Thread(target=worker, daemon=True)
+    th.start()
+    try:
+        c.request_step()
+        time.sleep(0.4)
+        assert len(turns) == 1, f"one step released {len(turns)} turns"
+
+        c.request_step()
+        time.sleep(0.4)
+        assert len(turns) == 2, f"second step released {len(turns) - 1} extra turns"
+    finally:
+        stop.set()
+        c.resume()
+        th.join(timeout=2.0)
+
+
+def test_toggle_flips_and_clears_a_pending_step():
+    from environment.rendering import PlaybackControls
+
+    c = PlaybackControls()
+    c.toggle()
+    assert c.paused
+    c.request_step()
+    c.resume()
+    assert not c.paused
+    # a pending single-step must not survive a resume, or the next pause would
+    # silently grant one free turn
+    c.pause()
+    released = threading.Event()
+    th = threading.Thread(
+        target=lambda: (c.wait_for_turn(), released.set()), daemon=True
+    )
+    th.start()
+    assert not released.wait(0.3), "a stale step request leaked through"
+    c.resume()
+    th.join(timeout=2.0)
+
+
+def test_speed_is_clamped_to_sane_bounds():
+    from environment.rendering import PlaybackControls
+
+    c = PlaybackControls()
+    c.set_speed(1000.0)
+    assert c.speed == PlaybackControls.MAX_SPEED
+    c.set_speed(0.0)
+    assert c.speed == PlaybackControls.MIN_SPEED
+    c.set_speed(2.0)
+    assert c.speed == 2.0
+
+
+def test_apply_handles_commands_and_ignores_rubbish():
+    from environment.rendering import PlaybackControls
+
+    c = PlaybackControls()
+    c.apply({"cmd": "pause"})
+    assert c.paused
+    c.apply({"cmd": "resume"})
+    assert not c.paused
+    c.apply({"cmd": "speed", "value": 4})
+    assert c.speed == 4.0
+
+    # a malformed or unknown command must not raise: it arrives from the
+    # network and the renderer thread has no business dying over it
+    for bad in ({}, {"cmd": "nonsense"}, {"cmd": "speed", "value": "fast"},
+                {"cmd": "speed"}):
+        c.apply(bad)
+    assert c.speed == 4.0
+
+
+def test_snapshot_reports_authoritative_state():
+    from environment.rendering import PlaybackControls
+
+    c = PlaybackControls()
+    c.pause()
+    c.set_speed(0.5)
+    assert c.snapshot() == {"paused": True, "speed": 0.5}
