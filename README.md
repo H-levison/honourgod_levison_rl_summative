@@ -36,6 +36,22 @@ desk operator rather than failing, so the scene is always demonstrable.
 Three.js is **vendored** under `assets/vendor/` (pinned to r169), so the scene
 loads with no network access and no Node.js toolchain.
 
+### In the scene
+
+| Control | Does |
+|---|---|
+| **Pause / Resume** (or `Space`) | Halts the simulation itself, not just the view |
+| **Step** (or `→` while paused) | Advances exactly one decision |
+| **− / +** | Playback speed, 0.25x to 8x |
+| Drag / scroll | Orbit and zoom the camera |
+
+The buttons post commands back over the same websocket that streams state, and
+the simulation thread blocks between steps rather than buffering frames, so a
+paused scene is genuinely stopped and cannot flood on resume. The **policy
+decision** panel shows the agent's distribution over all 13 actions each step
+(softmax for the policy-gradient agents, Q-values for DQN), and **completed
+weeks** accumulates each finished episode's outcome.
+
 ### Commands
 
 ```bash
@@ -98,6 +114,23 @@ the week with more equity than it started:
 | A2C `a06-critic-weak` | −43.9 | −1.74% | 4.92% | 153 | +72.92 ± 10.90, t = +6.69 |
 | `heuristic` | −69.1 | −3.28% | 5.73% | 2,085 | +47.71 ± 12.33, t = +3.87 |
 | DQN `d09-batch-large` | −85.5 | −3.16% | 5.56% | 722 | +31.30 ± 14.25, t = +2.20 |
+
+**Seed sensitivity.** The table above reports the shipped checkpoints, each
+trained on one seed. Retraining every winning configuration across three seeds
+and re-scoring on the same episodes gives:
+
+| Algorithm | Mean (3 seeds) | Std. dev. | Worst | Best | Beats heuristic? |
+|---|---:|---:|---:|---:|---|
+| **PPO** | **+15.3** | 18.9 | +0.3 | +36.5 | yes |
+| A2C | −44.2 | **2.4** | −46.8 | −42.0 | yes |
+| REINFORCE | −92.7 | 60.1 | −155.3 | −35.4 | **no** |
+| DQN | −100.3 | 30.8 | −135.7 | −79.6 | **no** |
+
+PPO's *worst* seed still beats every other algorithm's *best* seed, so its lead
+is not a lucky initialisation. REINFORCE's is: its spread is the widest in the
+study and its mean falls below the heuristic, so the single-seed scoreboard
+overstates it. Two of four learners beat the hand-written operator on average,
+not three. Reproduce with `uv run main.py replicate`.
 
 The fee column is where the learned policies separate from the written one. The
 heuristic prevents every stockout and pays $2,085 to do it; PPO tolerates 14.9
