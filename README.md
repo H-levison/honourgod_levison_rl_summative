@@ -13,6 +13,25 @@ The tension that defines the problem: **earning money requires holding fiat
 inventory, and holding fiat inventory is exactly what loses money when a
 currency devalues.**
 
+![The trained PPO agent running the desk](report/figures/00_environment.png)
+
+*The trained PPO agent at work. Liquid level in each glass column **is** the pool
+balance; the drone is the agent and moves to whichever pool it is acting on. The
+left panel is the policy itself — its probability over all 13 actions, updated
+every step — and the right-hand gauges show the latent devaluation pressure the
+agent has to trade on.*
+
+### One week, replayed
+
+![Animated replay of a full trading week](report/figures/replay.gif)
+
+*A complete 500-step week for the trained PPO agent (seed 20004, +1.78% — the
+median week on this seed block is +1.94%, so this is a typical run rather than a
+flattering one). Watch the inventory bars: the agent holds most of its book in
+the USDT rail and keeps fiat balances small, which is how it survives the three
+devaluation events in this episode. Regenerate with
+`uv run python -m training.replay`.*
+
 ---
 
 ## Quickstart
@@ -62,6 +81,7 @@ uv run main.py train --algo dqn           one training run
 uv run main.py sweep --algo ppo           that algorithm's 12-run grid
 uv run python -m training.plots           build the report figures
 uv run python -m training.tables          build the report tables
+uv run python -m training.replay          animate one week to a GIF
 uv run python training/hparams.py         print the full hyperparameter grid
 uv run pytest                             test suite
 ```
