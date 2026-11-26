@@ -40,7 +40,7 @@ Requires [uv](https://docs.astral.sh/uv/). No manual virtual environment, no
 `pip install`.
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/H-levison/honourgod_levison_rl_summative.git 
 cd honourgod_levison_rl_summative
 
 uv sync                 # resolves and installs everything, including Python 3.12
